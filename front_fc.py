@@ -10,10 +10,19 @@ def handler(environ, start_response):
     logger.info(environ)
 
     msg_to_slack = None
+
     SLACK_TOKEN = os.environ['SLACK_TOKEN']
     SLACK_CHANNEL = os.environ['SLACK_CHANNEL']
     FUNCTION_COMPUTE_ENDPOINT = os.environ['FUNCTION_COMPUTE_ENDPOINT']
+    # Example: ECS_CMD_CODE = ['start' 'stop']
     ECS_CMD_CODE = os.environ['ECS_CMD_CODE']
+
+    # STS Token of FC Role
+    ACCESS_KEY_ID = environ['accessKeyID']
+    ACCESS_KEY_SECRET = environ['accessKeySecret']
+    SECRET_TOKEN = environ['securityToken']
+
+    FUNCTION_COMPUTE_SERVICE = environ['topic']
     INVOKE_FC = os.environ['INVOKE_FC']
 
     # SLACK_INFO
@@ -61,17 +70,17 @@ def handler(environ, start_response):
     #  FC
     ################
     client = fc2.Client(
-        endpoint=FUNCTION_COMPUTE_ENDPOINT,
-        accessKeyID=environ['accessKeyID'],
-        accessKeySecret=environ['accessKeySecret'],
-        securityToken=environ['securityToken']
+        endpoint = FUNCTION_COMPUTE_ENDPOINT,
+        accessKeyID = ACCESS_KEY_ID,
+        accessKeySecret = ACCESS_KEY_SECRET,
+        securityToken = SECRET_TOKEN
     )
 
     client.invoke_function(
-        environ['topic'],
+        FUNCTION_COMPUTE_SERVICE,
         INVOKE_FC,
         headers = {'x-fc-invocation-type': 'Async'},
-        payload = TEXT_INFO[1] + '&' + RESPONSE_URL_INFO[1] + '&' + SLACK_CHANNEL
+        payload = TEXT_INFO[1] + '&' + RESPONSE_URL_INFO[1] + '&' + SLACK_CHANNEL + '&' + ACCESS_KEY_ID + '&' + ACCESS_KEY_SECRET + '&' + SECRET_TOKEN
     )
 
     msg_to_slack = '[Info] Run /ecs '

@@ -9,6 +9,7 @@ import time
 from aliyunsdkcore.client import AcsClient
 from aliyunsdkcore.request import CommonRequest
 from aliyunsdkecs.request.v20140526 import DescribeInstanceAttributeRequest
+from aliyunsdkcore.auth.credentials import StsTokenCredential
 
 def handler(event, context):
     logger = logging.getLogger()
@@ -25,8 +26,9 @@ def handler(event, context):
     CMD_INFO = event_data[0]
     response_url = event_data[1]
     SLACK_CHANNEL = event_data[2]
-    ACCESS_KEY_ID = os.environ['ACCESS_KEY_ID']
-    ACCESS_KEY_SECRET = os.environ['ACCESS_KEY_SECRET']
+    ACCESS_KEY_ID = event_data[3]
+    ACCESS_KEY_SECRET = event_data[4]
+    SECRET_TOKEN = event_data[5]
 
     # CMD: ["start" "<ECS instance id>"] or ["start" "<ECS instance id>" "<Region id>"]
     CMD = CMD_INFO.split("+")
@@ -38,8 +40,12 @@ def handler(event, context):
     ################
     #  ECS
     ################
-    client = AcsClient(ACCESS_KEY_ID, ACCESS_KEY_SECRET, REGION_ID)
+    
+    sts_token = StsTokenCredential(ACCESS_KEY_ID, ACCESS_KEY_SECRET, SECRET_TOKEN)
+    client = AcsClient(credential=sts_token)
 
+    #TODO
+    # STOP
     if CMD[0] == START:
         request = CommonRequest()
         request.set_accept_format('json')
@@ -70,7 +76,7 @@ def handler(event, context):
         time.sleep(2)
         retry_count += 1
 
-    if response["Status"] == "Running":
+    if response["Status"] == RUNNING_STATUS_CODE :
         msg_to_slack = "[Info] ECS instance " + CMD[1] +  " is running now ! "
     else:
         msg_to_slack = "[Err] Something wrong when run the command: /ecs " + CMD[0] + ' ' + CMD[1] + " !"
