@@ -85,7 +85,7 @@ def handler(environ, start_response):
 
     msg_to_slack = '[Info] Run /ecs '
     for data in PARAMS:
-        msg_to_slack += data
+        msg_to_slack += data + ' '
     msg_to_slack = bytes(msg_to_slack, 'utf-8')
 
     status = '200 OK'
