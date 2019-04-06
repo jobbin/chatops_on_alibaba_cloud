@@ -1,13 +1,47 @@
 ROSTemplateFormatVersion: '2015-09-01'
 Transform: 'Aliyun::Serverless-2018-04-03'
 Resources:
-  chatops_on_alibaba_cloud:
+  chatops-log-project: # Your log project name, it should be unique name.
+    Type: 'Aliyun::Serverless::Log'
+    Properties:
+      Description: 'ChatOps log project.'
+    chatops-log-store: # Your log store name
+      Type: 'Aliyun::Serverless::Log::Logstore'
+      Properties:
+        TTL: 10
+        ShardCount: 1
+  chatops-on-alibaba-cloud: # service name
     Type: 'Aliyun::Serverless::Service'
     Properties:
-      Description: 'helloworld'
-    chatops_on_alibaba_cloud:
+      Description: ChatOps on Alibaba Cloud intergrated Slack.
+      LogConfig:
+        Project: chatops-log-project # Log project which FC use.
+        Logstore: chatops-log-store # Log store which FC use
+    front-fc: # function name
       Type: 'Aliyun::Serverless::Function'
       Properties:
-        Handler: index.handler
+        Description: Checking and passing the request from Slack.
+        Handler: front_fc.handler
         Runtime: python3
-        CodeUri: 'index.py'
+        Timeout: 10
+        CodeUri: './'
+        EnvironmentVariables:
+          'ECS_CMD_CODE': '["start" "stop"]' # array, cmd you defined.
+          'FUNCTION_COMPUTE_ENDPOINT': '<FUNCTION_COMPUTE_ENDPOINT>' # https://<account id>.<region-id>-internal.fc.aliyuncs.com
+          'INVOKE_FC': 'execution-fc' # FC name which you want to invoke. 
+          'SLACK_CHANNEL': '<SLACK_CHANNEL>' # The Salck channel name you authorize. 
+          'SLACK_TOKEN': '<SLACK_TOKEN>' # You can get Slack token in Slash Commands Settings page.
+      Events:
+        http-trigger: # trigger name
+          Type: HTTP
+          Properties:
+            AuthType: ANONYMOUS
+            Methods: ['GET']
+    execution-fc: # function name
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Description: Executing the cmd from FrontFC(Slack).
+        Handler: execution_fc.handler
+        Runtime: python3
+        CodeUri: './'
+        Timeout: 60
