@@ -14,6 +14,8 @@ Resources:
     Type: 'Aliyun::Serverless::Service'
     Properties:
       Description: ChatOps on Alibaba Cloud intergrated Slack.
+      Policies:
+        - AliyunECSFullAccess
       LogConfig:
         Project: chatops-log-project # Log project which FC use.
         Logstore: chatops-log-store # Log store which FC use

@@ -1,0 +1,49 @@
+ROSTemplateFormatVersion: '2015-09-01'
+Transform: 'Aliyun::Serverless-2018-04-03'
+Resources:
+  qiubinbin-test-log-project:
+    Type: 'Aliyun::Serverless::Log'
+    Properties:
+      Description: 'just test log'
+    test-log-store:
+      Type: 'Aliyun::Serverless::Log::Logstore'
+      Properties:
+        TTL: 10
+        ShardCount: 1
+  TestService: # service name
+    Type: 'Aliyun::Serverless::Service'
+    Properties:
+      Description: testtesttest
+      Policies:
+        - AliyunECSFullAccess
+      LogConfig:
+        Project: qiubinbin-test-log-project
+        Logstore: test-log-store
+    TestFC: # function name
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Description: fc testtest
+        Handler: front_fc.handler
+        Runtime: python3
+        Timeout: 10
+        CodeUri: './'
+        EnvironmentVariables:
+          'ECS_CMD_CODE': '["start" "stop"]'
+          'FUNCTION_COMPUTE_ENDPOINT': 'https://5644330662946921.ap-northeast-1-internal.fc.aliyuncs.com'
+          'INVOKE_FC': 'TestFC2'
+          'SLACK_CHANNEL': 'chatops'
+          'SLACK_TOKEN': 'HHk4FE5Ck7eg6ZWyqKmf2wvY'
+      Events:
+        http-test: # trigger name
+          Type: HTTP # http trigger
+          Properties:
+            AuthType: ANONYMOUS
+            Methods: ['GET']
+    TestFC2: # function name
+      Type: 'Aliyun::Serverless::Function'
+      Properties:
+        Description: aaaaaaa
+        Handler: execution_fc.handler
+        Runtime: python3
+        CodeUri: './'
+        Timeout: 60
